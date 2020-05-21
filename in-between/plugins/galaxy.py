@@ -1,110 +1,102 @@
+from plugins.plugin import Plugin
 from xml.etree.ElementTree import Element
 
-def handle_lpv(xml):
-    # no params to get
-    version = '0'
+class PluginGalaxy(Plugin):
+    def __init__(self, plugin_id):
+        Plugin.__init__(self, plugin_id)
+        self.register_route('lpv', self.handle_lpv)
+        self.register_route('vsu', self.handle_vsu)
+        self.register_route('sp', self.handle_sp)
+        self.register_route('rr', self.handle_rr)
+        self.register_route('profile', self.handle_profile)
+        self.register_route('ge', self.handle_ge)
+        self.register_route('gls', self.handle_gls)
+        self.register_route('p', self.handle_p)
 
-    response = Element('lpv')
-    response.set('v', version)
+    def handle_lpv(self, request):
+        # NOTE no params to get
+        version = '0'
 
-    return response
+        response = Element('lpv')
+        response.set('v', version)
 
-def handle_vsu(xml):
-    response = Element('vsu')
-
-    return response
-
-def handle_sp(xml):
-    """Save Profile"""
-    response = Element('sp')
-
-    return response
-
-def handle_rr(xml):
-    response = Element('rr')
-
-    return response
-
-def handle_profile(xml):
-    response = Element('profile')
-
-    return response
-
-def handle_ge(xml):
-    response = Element('ge')
-
-    return response
-
-def handle_gls(xml):
-    """Get Leaderboard Statistics"""
-    stat_type = xml.get('id') # 1 for games, 2 for items
-
-    response = Element('gls')
-    response.set('id', stat_type)
-
-    game_records = [
-        {
-            'game_id': '6',
-            'sp': '500',
-            'mp': '600'
-        },
-        {
-            'game_id': '7',
-            'sp': '700',
-            'mp': '800'
-        }
-    ]
-
-    item_records = [
-        {
-            'item_id': '1a',
-            'count': '55'
-        }
-    ]
-
-    records = Element('records')
-    records.set('id', stat_type)
-
-    if stat_type == '1':
-        for record_data in game_records:
-            record = Element('record')
-            record.set('id', record_data['game_id'])
-            record.set('sp', record_data['sp'])
-            record.set('mp', record_data['mp'])
-
-            records.append(record)
-    elif stat_type == '2':
-        for record_data in item_records:
-            record = Element('record')
-            record.set('id', record_data['item_id'])
-            record.set('c', record_data['count'])
-
-            records.append(record)
-            
-    response.append(records)
-
-    return response
-
-def handle_p(xml):
-    pass
-
-routes = {
-    "lpv": handle_lpv,
-    "vsu": handle_vsu,
-    "sp": handle_sp,
-    "rr": handle_rr,
-    "profile": handle_profile,
-    "ge": handle_ge,
-    "gls": handle_gls,
-    "p": handle_p
-}
-
-def handle_request(xml):
-    route = xml.tag
-    if route in routes:
-        response = Element('h7_0')
-        info = routes[route](xml)
-        if info is not None:
-            response.append(info)
         return response
-    raise ValueError(f'No route with id {route} registered to base.')
+
+    def handle_vsu(self, request):
+        response = Element('vsu')
+
+        return response
+
+    def handle_sp(self, request):
+        """Save Profile"""
+        response = Element('sp')
+
+        return response
+
+    def handle_rr(self, request):
+        response = Element('rr')
+
+        return response
+
+    def handle_profile(self, request):
+        response = Element('profile')
+
+        return response
+
+    def handle_ge(self, request):
+        response = Element('ge')
+
+        return response
+
+    def handle_gls(self, request):
+        """Get Leaderboard Statistics"""
+        stat_type = request.get('id') # 1 for games, 2 for items
+
+        response = Element('gls')
+        response.set('id', stat_type)
+
+        game_records = [
+            {
+                'game_id': '6',
+                'sp': '500',
+                'mp': '600'
+            },
+            {
+                'game_id': '7',
+                'sp': '700',
+                'mp': '800'
+            }
+        ]
+
+        item_records = [
+            {
+                'item_id': '1a',
+                'count': '55'
+            }
+        ]
+
+        records = Element('records')
+        records.set('id', stat_type)
+
+        if stat_type == '1':
+            for record_data in game_records:
+                record = Element('record')
+                record.set('id', record_data['game_id'])
+                record.set('sp', record_data['sp'])
+                record.set('mp', record_data['mp'])
+
+                records.append(record)
+        elif stat_type == '2':
+            for record_data in item_records:
+                record = Element('record')
+                record.set('id', record_data['item_id'])
+                record.set('c', record_data['count'])
+
+                records.append(record)
+                
+        response.append(records)
+
+        return response
+
+    def handle_p(self, request):
+        pass
