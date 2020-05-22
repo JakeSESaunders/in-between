@@ -1,4 +1,5 @@
 from plugins.plugin import Plugin
+import data.user as user
 from xml.etree.ElementTree import Element
 
 class PluginUser(Plugin):
@@ -43,34 +44,34 @@ class PluginUser(Plugin):
 
         return response
 
-    def handle_u_gcl(self, request):
+    def handle_u_gcl(self, request): # TODO
         """Get Currency List"""
         pass
 
-    def handle_u_gwl(self, request):
+    def handle_u_gwl(self, request): # TODO
         """Get Country List"""
         pass
 
-    def handle_u_gul(self, request):
+    def handle_u_gul(self, request): # TODO
         """Get USA States List"""
         pass
 
-    def handle_u_gfl(self, request):
+    def handle_u_gfl(self, request): # TODO
         """Get File List"""
         pass
 
     def handle_u_reg(self, request):
         """Register"""
-        login = request.get('l')
+        name = request.get('l') # l for login name?
         password = request.get('p')
         client_id = request.get('c')
         affiliate_id = request.get('a')
         ad_id = request.get('d')
-        secret_answer = request.get('sa')
-        secret_question = request.get('sq')
-
+        answer = request.get('sa')
+        question = request.get('sq')
+        # TODO change r based on result of register_user
         r = '0' # can take values 0-5, 90 and 99
-        user_id = '2734650'
+        user_id = user.register_user(name, password, question, answer)
 
         response = Element('u_reg')
         response.set('r', r)
@@ -78,19 +79,19 @@ class PluginUser(Plugin):
 
         return response
 
-    def handle_u_sup(self, request):
+    def handle_u_sup(self, request): # TODO
         """Send Update Profile"""
         pass
 
-    def handle_u_gup(self, request):
+    def handle_u_gup(self, request): # TODO
         """Get User Profile"""
         pass
 
-    def handle_u_gsp(self, request):
+    def handle_u_gsp(self, request): # TODO
         """Get Short Profile"""
         pass
 
-    def handle_u_gus(self, request):
+    def handle_u_gus(self, request): # TODO
         """Get User Stats"""
         pass
 
@@ -101,6 +102,8 @@ class PluginUser(Plugin):
         t = request.get('t') # to id
         m = request.get('m') # message
 
+        # TODO send message to recipient
+
         response = Element('u_spm')
         response.set('r', r)
         response.set('f', f)
@@ -109,19 +112,19 @@ class PluginUser(Plugin):
 
         return response
 
-    def handle_u_gsq(self, request):
+    def handle_u_gsq(self, request): # TODO
         """Get Secure Question?"""
         pass
 
-    def handle_u_acp(self, request):
+    def handle_u_acp(self, request): # TODO
         """Account Change Password"""
         pass
 
-    def handle_u_afp(self, request):
+    def handle_u_afp(self, request): # TODO
         """Account Forgot Password"""
         pass
 
-    def handle_u_rpm(self, request):
+    def handle_u_rpm(self, request): # TODO
         """Receive Private Message"""
         pass
 
@@ -132,6 +135,8 @@ class PluginUser(Plugin):
 
         response = Element('u_gbl')
         response.set('r', r)
+
+        # TODO connect to db
 
         buddy_list = [
             {
@@ -172,6 +177,8 @@ class PluginUser(Plugin):
         """Add Buddy"""
         buddy_name = request.get('n')
 
+        # TODO connect to db
+
         r = '0' # can take values 0-3
         n = 'SOMEONE' # name
         a = '1'
@@ -197,6 +204,9 @@ class PluginUser(Plugin):
 
     def handle_u_abr(self, request):
         """Add Buddy Request"""
+
+        # TODO connect to db
+
         b = '512' # id
         n = 'SOMEONEELSE' # name
 
@@ -206,15 +216,15 @@ class PluginUser(Plugin):
 
         return response
         
-    def handle_u_dbd(self, request):
+    def handle_u_dbd(self, request): # TODO
         """Delete Buddy"""
         pass
 
-    def handle_u_dbr(self, request):
+    def handle_u_dbr(self, request): # TODO
         """Delete Buddy Request"""
         pass
 
-    def handle_u_fbd(self, request):
+    def handle_u_fbd(self, request): # TODO
         """Flag? Buddy"""
         pass
 
@@ -222,6 +232,8 @@ class PluginUser(Plugin):
         """Chat Status (Buddy's chat status?)"""
         new_status = request.get('s') # can take values 0 for ready to party or 1 for dnd
         user_id = '2734650'
+
+        # TODO make data persistent
 
         response = Element('u_ccs')
         response.set('id', user_id)
@@ -233,6 +245,8 @@ class PluginUser(Plugin):
         """Change Phone Status"""
         ph_in = request.get('ph')
 
+        # TODO make data persistent
+
         user_id = '2734650'
         ph_out = ph_in
 
@@ -242,29 +256,30 @@ class PluginUser(Plugin):
 
         return response
 
-    def handle_u_cos(self, request):
+    def handle_u_cos(self, request): # TODO
         """Change Online Status"""
         pass
 
-    def handle_u_gcb(self, request):
+    def handle_u_gcb(self, request): # TODO
         """Get Coin Balance"""
         pass
 
     # Appears to not be implemented
-    def handle_u_gth(self, request):
+    def handle_u_gth(self, request): # TODO
         """Get Transaction History"""
         pass
 
-    def handle_u_inv(self, request):
+    def handle_u_inv(self, request): # TODO
         """Invitation"""
         pass
 
-    def handle_u_inr(self, request):
-        """Invitaation Response"""
+    def handle_u_inr(self, request): # TODO
+        """Invitation Response"""
         pass
 
     def handle_u_p(self, request):
         """Ping"""
+        # TODO make this send user 'waiting messages'
         t = '1'
 
         response = Element('u_p')
@@ -274,6 +289,7 @@ class PluginUser(Plugin):
 
     def handle_p(self, request):
         """Ping"""
+        # TODO make this send user 'waiting messages'
         t = '1'
 
         response = Element('p')

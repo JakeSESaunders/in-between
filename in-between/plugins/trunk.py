@@ -1,5 +1,6 @@
 from plugins.plugin import Plugin
 from xml.etree.ElementTree import Element
+import data.trunk
 
 class PluginTrunk(Plugin):
     def __init__(self, plugin_id):
@@ -51,7 +52,19 @@ class PluginTrunk(Plugin):
 
         response = Element('gfl')
         response.set('url', url)
-        
+
+        familiar_list = data.trunk.get_familiar_list()
+
+        for familiar_data in familiar_list:
+            familiar = Element('f')
+            familiar.set('id', familiar_data.stack_id)
+            familiar.set('rid', familiar_data.item_id)
+            familiar.set('h', familiar_data.time)
+            familiar.set('c', familiar_data.cost)
+            familiar.set('dc', familiar_data.discounted_cost)
+            familiar.set('d', familiar_data.discount)
+            response.append(familiar)
+
         return response
 
     def handle_gjl(self, request):
@@ -61,30 +74,15 @@ class PluginTrunk(Plugin):
         response = Element('gjl')
         response.set('url', url)
 
-        jammer_list = [
-            {
-                'id': '1',
-                'rid': '80014a',
-                'c': '5',
-                'q': '6',
-                'd': '0'
-            },
-            {
-                'id': '2',
-                'rid': '80014a',
-                'c': '39',
-                'q': '10',
-                'd': '1'
-            }
-        ]
+        jammer_list = data.trunk.get_jammer_list()
 
         for jammer_data in jammer_list:
             jammer = Element('j')
-            jammer.set('id', jammer_data['id'])
-            jammer.set('rid', jammer_data['rid'])
-            jammer.set('c', jammer_data['c'])
-            jammer.set('q', jammer_data['q'])
-            jammer.set('d', jammer_data['d'])
+            jammer.set('id', jammer_data.stack_id)
+            jammer.set('rid', jammer_data.item_id)
+            jammer.set('q', jammer_data.quantity)
+            jammer.set('c', jammer_data.cost)
+            jammer.set('d', jammer_data.discount)
             response.append(jammer)
 
         return response

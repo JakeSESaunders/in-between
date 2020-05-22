@@ -5,6 +5,7 @@ class Plugin:
         self.plugin_id = plugin_id
         self.routes = {}
         self.user = None
+        self.waiting_messages = []
 
     def handle_request(self, request):
         """Handle an xml request directed at the plugin and return an appropriate xml response."""
@@ -17,7 +18,9 @@ class Plugin:
         info = route_handler(request)
         if info is not None:
             response.append(info)
-
+        for message in self.waiting_messages:
+            response.append(message)
+            self.waiting_messages = []
         return response
 
     def register_route(self, route_id, route_handler):
@@ -27,3 +30,6 @@ class Plugin:
         if route_id in self.routes:
             return self.routes[route_id]
         raise ValueError(f'No route with id {route_id} registered to plugin {self.id}')
+
+    def add_waiting_message(self, message):
+        self.waiting_messages.append(message)

@@ -1,3 +1,4 @@
+import sys
 import socketserver
 from socketserver import BaseRequestHandler
 from plugins.user import PluginUser
@@ -7,7 +8,12 @@ from plugins.galaxy import PluginGalaxy
 from plugins.trunk import PluginTrunk
 import xml.etree.ElementTree as ElementTree
 from xml.etree.ElementTree import Element
-from data.user import User
+from data.user import User, check_login
+from data.userlist import UserList
+import data.setup as setup
+
+# List of user objects for the clients currently connected to the server.
+user_list = UserList()
 
 class InBetweenHandler(BaseRequestHandler):
     def __init__(self, request, client_address, server):
@@ -29,7 +35,9 @@ class InBetweenHandler(BaseRequestHandler):
             while True:
                 rq = self.request.recv(128)
                 if len(rq) <= 0:
-                    break
+                    print('Connection Closed')
+                    self.request.close()
+                    return
                 if rq[-1] == 0x00:
                     raw_requests += rq
                     break
@@ -39,12 +47,21 @@ class InBetweenHandler(BaseRequestHandler):
                 for encoded_response in encoded_responses:
                     self.request.send(encoded_response)
 
+    # TODO figure out how to call this
+    def finish(self):
+        if self.user is not None:
+            global user_list
+            user_list.user_disconnect(self.user.user_id)
+            print(f'[DISCONNECT]: User {self.user.user_id} left the server.')
+
     def handle_raw_requests(self, raw_requests):
         """Accept a bytearray of request data, return a list of appropriate bytearray responses."""
         encoded_requests = raw_requests.split(b'\x00')[:-1] # the final element should be empty
         encoded_responses = []
 
         for encoded_request in encoded_requests:
+            print(f'[REQ {self.client_address}]: {encoded_request}')
+
             decoded_request = encoded_request.decode('latin-1')
 
             request_end_char = len(decoded_request) - decoded_request[::-1].index('>')
@@ -62,6 +79,8 @@ class InBetweenHandler(BaseRequestHandler):
                 encoded_response = bytearray(ElementTree.tostring(xml_response))
                 encoded_response.append(0x00)
                 encoded_responses.append(encoded_response)
+
+                print(f'[RES {self.client_address}]: {encoded_response}')
 
         return encoded_responses
 
@@ -89,18 +108,22 @@ class InBetweenHandler(BaseRequestHandler):
         request_login_code = request.get('l')
         name = request.get('n')
         password = request.get('p')
-        # TODO check info supplied and returned matches a database entry
-        response_login_code = '0'
-        user_id = '2734650'
-        service_id = '1'
-        
-        client_address = self.client_address
 
-        user = User(client_address, user_id)
+        service_id = '1' # NOTE arbitrary constant
 
         response = Element('a_lru')
+
+        user_id = check_login(name, password)
+        if user_id is not None:
+            response_login_code = '0'
+            response.set('u', user_id)
+        
+            client_address = self.client_address
+            user = User(client_address, user_id)
+        else:
+            response_login_code = '1'
+            
         response.set('r', response_login_code)
-        response.set('u', user_id)
         response.set('s', service_id)
 
         return response
@@ -111,7 +134,7 @@ class InBetweenHandler(BaseRequestHandler):
         advertising_id = request.get('d')
         # NOTE purpose of this route is unknown, why are we providing a guest user with a password???
         response_login_code = '0'
-        user_id = '2734650'
+        user_id = '1234567'
         name = 'GUESTUSER'
         password = 'pword'
         service_id = '1'
@@ -193,9 +216,21 @@ class InBetweenHandler(BaseRequestHandler):
         self.user = user
         for plugin in self.plugins.values():
             plugin.user = user
+        global user_list
+        user_list.user_connect(user)
 
-if __name__ == "__main__":
-    address = ('localhost', 80)
+def start_server(ip, port):
+    address = (ip, port)
     with socketserver.ThreadingTCPServer(address, InBetweenHandler) as server:
         print('Server started! Looking for connections...')
         server.serve_forever()
+
+if __name__ == "__main__":
+    args = sys.argv[1:]
+    if len(args) > 0:
+        if args[0] == 'setup':
+            setup.setup_database()
+        else:
+            start_server('localhost', 80)
+    else:
+        start_server('localhost', 80)
