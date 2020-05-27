@@ -1,6 +1,7 @@
 from plugins.plugin import Plugin
 import data.user as user
 from xml.etree.ElementTree import Element
+from copy import copy
 
 class PluginUser(Plugin):
     def __init__(self, plugin_id):
@@ -36,13 +37,10 @@ class PluginUser(Plugin):
         self.register_route('u_p', self.handle_u_p)
         self.register_route('p', self.handle_p)
 
-    def handle_request(self, request):
-        """Handle an xml request directed at the plugin and return an appropriate xml response."""
-        route_id = request.tag
-        route_handler = self.get_route(route_id)
-        response = route_handler(request)
-
-        return response
+    def get_responses(self):
+        responses = copy(self.responses)
+        self.responses = []
+        return responses
 
     def handle_u_gcl(self, request): # TODO
         """Get Currency List"""
@@ -239,7 +237,7 @@ class PluginUser(Plugin):
         response.set('id', user_id)
         response.set('s', new_status)
 
-        return response   
+        return response
 
     def handle_u_cph(self, request):
         """Change Phone Status"""

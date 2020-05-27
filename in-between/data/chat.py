@@ -60,4 +60,4 @@ class ChatRoom:
 
     def send_to_room(self, message):
         for user in self.users:
-            user.chat_plugin.add_waiting_message(message)
+            user.chat_plugin.queue_response(message)

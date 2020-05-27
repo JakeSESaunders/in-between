@@ -29,7 +29,7 @@ class PluginTrunk(Plugin):
         """Get Items List"""
         response = Element('gil')
 
-        return response
+        self.queue_response(response)
 
     def handle_gcl(self, request):
         """Get Cleanings? List"""
@@ -38,13 +38,13 @@ class PluginTrunk(Plugin):
         response = Element('gcl')
         response.set('url', url)
         
-        return response
+        self.queue_response(response)
 
     def handle_grl(self, request):
         """Get Rooms List"""
         response = Element('grl')
 
-        return response
+        self.queue_response(response)
 
     def handle_gfl(self, request):
         """Get Familiars List"""
@@ -65,7 +65,7 @@ class PluginTrunk(Plugin):
             familiar.set('d', familiar_data.discount)
             response.append(familiar)
 
-        return response
+        self.queue_response(response)
 
     def handle_gjl(self, request):
         """Get Jammers List"""
@@ -85,7 +85,7 @@ class PluginTrunk(Plugin):
             jammer.set('d', jammer_data.discount)
             response.append(jammer)
 
-        return response
+        self.queue_response(response)
 
     def handle_gml(self, request):
         """Get Moods List"""
@@ -94,7 +94,7 @@ class PluginTrunk(Plugin):
         response = Element('gml')
         response.set('url', url)
 
-        return response
+        self.queue_response(response)
 
     def handle_glb(self, request):
         """Get Loot Balance"""
@@ -103,13 +103,13 @@ class PluginTrunk(Plugin):
         response = Element('glb')
         response.set('b', loot_balance)
 
-        return response
+        self.queue_response(response)
 
     def handle_gut(self, request):
         """Get User Transactions"""
         response = Element('gut')
 
-        return response
+        self.queue_response(response)
 
     def handle_gutc(self, request):
         """Get User Transactions Count"""
@@ -118,49 +118,49 @@ class PluginTrunk(Plugin):
         response = Element('gutc')
         response.set('c', transaction_count)
 
-        return response
+        self.queue_response(response)
 
     def handle_gsl(self, request):
         """Get Splash List"""
         response = Element('gsl')
 
-        return response
+        self.queue_response(response)
 
     def handle_te(self, request):
         """Transaction Error"""
         response = Element('te')
 
-        return response
+        self.queue_response(response)
 
     def handle_bi(self, request):
         """Buy Item"""
         response = Element('bi')
 
-        return response
+        self.queue_response(response)
 
     def handle_bc(self, request):
         """Buy Cleaning?"""
         response = Element('bc')
 
-        return response
+        self.queue_response(response)
 
     def handle_br(self, request):
         """Buy Room"""
         response = Element('br')
 
-        return response
+        self.queue_response(response)
 
     def handle_bf(self, request):
         """Buy Familiar"""
         response = Element('bf')
 
-        return response
+        self.queue_response(response)
 
     def handle_bm(self, request):
         """Buy Mood"""
         response = Element('bm')
 
-        return response
+        self.queue_response(response)
 
     def handle_bj(self, request):
         """Buy Jammer"""
@@ -171,13 +171,13 @@ class PluginTrunk(Plugin):
         response.set('id', database_id)
         response.set('b', new_balance)
         
-        return response
+        self.queue_response(response)
 
     def handle_gua(self, request):
         """Get User Asset"""
         response = Element('gua')
 
-        return response
+        self.queue_response(response)
 
     def handle_asp(self, request):
         """Asset Parameters"""
@@ -185,10 +185,10 @@ class PluginTrunk(Plugin):
 
         response = Element('asp')
 
-        return response
+        self.queue_response(response)
 
     def handle_p(self, request):
         """Ping"""
         response = Element('p')
 
-        return response
+        self.queue_response(response)

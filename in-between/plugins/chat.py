@@ -107,7 +107,7 @@ class PluginChat(Plugin):
         # On receiving a special event, broadcast to all other chat room users
         room_id = request.get('t')
         chat_rooms[room_id].send_to_room(request)
-        return request
+        # self.queue_response(response)
 
         #event = request[0]
         #event_id = event.tag
@@ -146,4 +146,3 @@ class PluginChat(Plugin):
 
     def handle_p(self, request):
         """Ping"""
-        # TODO use to send client 'waiting messages'

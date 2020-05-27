@@ -22,3 +22,6 @@ class UserList:
             if user.user_id == user_id:
                 return user
         return None
+    
+    def send_to_user(self, user_id):
+        pass

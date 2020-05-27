@@ -15,7 +15,7 @@ class PluginGalaxy(Plugin):
 
     def handle_lpv(self, request):
         # NOTE no params to get
-        version = '0'
+        version = '5'
 
         response = Element('lpv')
         response.set('v', version)
@@ -58,7 +58,7 @@ class PluginGalaxy(Plugin):
         game_records = [
             {
                 'game_id': '6',
-                'sp': '500',
+                'sp': 'TEST',
                 'mp': '600'
             },
             {
