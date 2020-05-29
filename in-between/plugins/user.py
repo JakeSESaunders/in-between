@@ -1,7 +1,8 @@
 from plugins.plugin import Plugin
-import data.user as user
 from xml.etree.ElementTree import Element
 from copy import copy
+from data.volatile import userlist
+from data.user import get_id, get_name
 
 class PluginUser(Plugin):
     def __init__(self, plugin_id):
@@ -37,6 +38,9 @@ class PluginUser(Plugin):
         self.register_route('u_p', self.handle_u_p)
         self.register_route('p', self.handle_p)
 
+    def set_user_id(self, user_id):
+        self.user_id = user_id
+
     def get_responses(self):
         responses = copy(self.responses)
         self.responses = []
@@ -69,11 +73,11 @@ class PluginUser(Plugin):
         question = request.get('sq')
         # TODO change r based on result of register_user
         r = '0' # can take values 0-5, 90 and 99
-        user_id = user.register_user(name, password, question, answer)
+        # user_id = user.register_user(name, password, question, answer)
 
         response = Element('u_reg')
-        response.set('r', r)
-        response.set('u', user_id)
+        response.set('r', str(r))
+        response.set('u', str(user_id))
 
         return response
 
@@ -95,18 +99,20 @@ class PluginUser(Plugin):
 
     def handle_u_spm(self, request):
         """Send Private Message"""
-        r = '0' # can take values 0-3 and 99, only 0-2 do anything
+        r = '0' # 0: OK, 1: OK, 2: OK, 3: Message isn't displayed
         f = request.get('f') # from id
         t = request.get('t') # to id
         m = request.get('m') # message
 
-        # TODO send message to recipient
-
         response = Element('u_spm')
-        response.set('r', r)
-        response.set('f', f)
-        response.set('t', t)
-        response.set('m', m)
+        response.set('r', str(r))
+        response.set('f', str(f))
+        response.set('t', str(t))
+        response.set('m', str(m))
+
+        # TODO check for existence of users, users logged in, buddy relation etc to affect r
+        global userlist
+        userlist.send_to_user_id(int(t), response)
 
         return response
 
@@ -128,44 +134,23 @@ class PluginUser(Plugin):
 
     def handle_u_gbl(self, request):
         """Get Buddy List"""
-        r = '0' # can take values 0 or 1
-        # for each buddy, add a child node with the following:
+        r = '0' # can take values 0 or 1 TODO what do vals represent?
 
         response = Element('u_gbl')
         response.set('r', r)
 
-        # TODO connect to db
-
-        buddy_list = [
-            {
-                'id': '512',
-                'name': 'GREG',
-                'online': '1',
-                'status': '0',
-                'bf': '0',
-                'cf': '0',
-                'ph': '1'
-            },
-            {
-                'id': '513',
-                'name': 'NOTGREG',
-                'online': '1',
-                'status': '0',
-                'bf': '0',
-                'cf': '0',
-                'ph': '1'
-            }
-        ]
+        global userlist
+        buddy_list = userlist.get_buddy_list(self.user_id)
 
         for buddy in buddy_list:
             buddy_data = Element('bd')
-            buddy_data.set('id', buddy['id'])
-            buddy_data.set('n', buddy['name'])
-            buddy_data.set('o', buddy['online'])
-            buddy_data.set('s', buddy['status'])
-            buddy_data.set('bf', buddy['bf'])
-            buddy_data.set('cf', buddy['cf'])
-            buddy_data.set('ph', buddy['ph'])
+            buddy_data.set('id', str(buddy[0]))
+            buddy_data.set('n', str(buddy[1]))
+            buddy_data.set('o', str(buddy[2]))
+            buddy_data.set('s', str(buddy[3]))
+            buddy_data.set('bf', str(buddy[4]))
+            buddy_data.set('cf', str(buddy[5]))
+            buddy_data.set('ph', str(buddy[6]))
 
             response.append(buddy_data)
 
@@ -175,44 +160,92 @@ class PluginUser(Plugin):
         """Add Buddy"""
         buddy_name = request.get('n')
 
-        # TODO connect to db
+        # r takes values 0-8
+        # 0: accepted immediately
+        # 1: your user doesn't exist
+        # 2: buddy with given name doesn't exist
+        # 3: already your buddy
+        # 4: decline
+        # 5: offline
+        # 6: adding yourself
+        # 7: your list full
+        # 8: their list full
 
-        r = '0' # can take values 0-3
-        n = 'SOMEONE' # name
-        a = '1'
-        b = '512' # id
-        o = '0' # online
-        s = '0' # status
-        bf = '0'
-        cf = '0'
-        ph = '0'
+        r = '0'
 
-        response = Element('u_abd')
-        response.set('r', r)
-        response.set('n', n)
-        response.set('a', a)
-        response.set('b', b)
-        response.set('o', o)
-        response.set('s', s)
-        response.set('bf', bf)
-        response.set('cf', cf)
-        response.set('ph', ph)
+        name = get_name(self.user_id)
+        if name is None:
+            r = '1'
+        buddy_id = get_id(buddy_name)
+        if buddy_id is None:
+            r = '2'
+        if self.user_id == buddy_id:
+            r = '6'
 
-        return response
+        global userlist
+        user = userlist.get_user_from_id(self.user_id)
+        if buddy_id in user.get_buddy_ids():
+            r = '3'
+        buddy = userlist.get_user_from_id(buddy_id)
+        if buddy is None:
+            r = '5'
+
+        if r != '0':
+            response = Element('u_abd')
+            response.set('r', str(r))
+            response.set('n', str(buddy_name))
+
+            return response
+
+        buddy_request = Element('u_abr')
+        buddy_request.set('b', str(self.user_id))
+        buddy_request.set('n', name)
+        userlist.send_to_user_id(buddy_id, buddy_request)
 
     def handle_u_abr(self, request):
-        """Add Buddy Request"""
+        """Add Buddy Response"""
+        response_code = int(request.get('r')) # response 0: reject, 1 accept
+        buddy_name = request.get('n') # name
 
-        # TODO connect to db
+        if response_code == 0:
+            r = '4'
+            response = Element('u_abd')
+            response.set('r', r)
+            response.set('n', buddy_name)
 
-        b = '512' # id
-        n = 'SOMEONEELSE' # name
+            return response
+        if response_code == 1:
+            global userlist
+            user = userlist.get_user_from_id(self.user_id)
+            buddy = userlist.get_user_from_name(buddy_name)
 
-        response = Element('u_abr')
-        response.set('b', b)
-        response.set('n', n)
+            print(user.name, buddy.name)
+            user.add_buddy(buddy.user_id)
+            
+            user_response = Element('u_abd')
+            user_response.set('r', '0')
+            user_response.set('n', str(buddy.name))
+            user_response.set('a', '0') # unknown
+            user_response.set('b', str(buddy.user_id))
+            user_response.set('o', str(buddy.online))
+            user_response.set('s', str(buddy.status))
+            user_response.set('bf', str(buddy.bf))
+            user_response.set('cf', str(buddy.cf))
+            user_response.set('ph', str(buddy.ph))
 
-        return response
+            buddy_response = Element('u_abd')
+            buddy_response.set('r', '0')
+            buddy_response.set('n', str(user.name))
+            buddy_response.set('a', '0') # unknown
+            buddy_response.set('b', str(user.user_id))
+            buddy_response.set('o', str(user.online))
+            buddy_response.set('s', str(user.status))
+            buddy_response.set('bf', str(user.bf))
+            buddy_response.set('cf', str(user.cf))
+            buddy_response.set('ph', str(user.ph))
+            
+            userlist.send_to_user_id(buddy.user_id, buddy_response)
+            return user_response
         
     def handle_u_dbd(self, request): # TODO
         """Delete Buddy"""
@@ -228,33 +261,33 @@ class PluginUser(Plugin):
 
     def handle_u_ccs(self, request):
         """Chat Status (Buddy's chat status?)"""
-        new_status = request.get('s') # can take values 0 for ready to party or 1 for dnd
-        user_id = '2734650'
+        status = request.get('s') # can take values 0 for ready to party or 1 for dnd
+        user_id = self.user_id
 
-        # TODO make data persistent
+        global userlist
+        userlist.change_chat_status(user_id, status)
 
         response = Element('u_ccs')
-        response.set('id', user_id)
-        response.set('s', new_status)
+        response.set('id', str(user_id))
+        response.set('s', str(status))
 
         return response
 
     def handle_u_cph(self, request):
         """Change Phone Status"""
-        ph_in = request.get('ph')
+        ph = request.get('ph')
 
-        # TODO make data persistent
+        # TODO connect to db
 
-        user_id = '2734650'
-        ph_out = ph_in
+        user_id = self.user_id
 
         response = Element('u_cph')
-        response.set('u', user_id)
-        response.set('ph', ph_out)
+        response.set('u', str(user_id))
+        response.set('ph', str(ph))
 
         return response
 
-    def handle_u_cos(self, request): # TODO
+    def handle_u_cos(self, request): # NOTE redundant
         """Change Online Status"""
         pass
 
@@ -262,8 +295,7 @@ class PluginUser(Plugin):
         """Get Coin Balance"""
         pass
 
-    # Appears to not be implemented
-    def handle_u_gth(self, request): # TODO
+    def handle_u_gth(self, request): # TODO appears not to be implemented
         """Get Transaction History"""
         pass
 
@@ -277,20 +309,18 @@ class PluginUser(Plugin):
 
     def handle_u_p(self, request):
         """Ping"""
-        # TODO make this send user 'waiting messages'
         t = '1'
 
         response = Element('u_p')
-        response.set('t', t)
+        response.set('t', str(t))
         
         return response
 
     def handle_p(self, request):
         """Ping"""
-        # TODO make this send user 'waiting messages'
         t = '1'
 
         response = Element('p')
-        response.set('t', t)
+        response.set('t', str(t))
         
         return response

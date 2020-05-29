@@ -1,5 +1,4 @@
 from plugins.plugin import Plugin
-from data.user import get_name
 from xml.etree.ElementTree import Element
 
 import data.chat as chat

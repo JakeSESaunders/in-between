@@ -7,6 +7,7 @@ class PluginGalaxy(Plugin):
         self.register_route('lpv', self.handle_lpv)
         self.register_route('vsu', self.handle_vsu)
         self.register_route('sp', self.handle_sp)
+        self.register_route('lp', self.handle_lp)
         self.register_route('rr', self.handle_rr)
         self.register_route('profile', self.handle_profile)
         self.register_route('ge', self.handle_ge)
@@ -14,16 +15,27 @@ class PluginGalaxy(Plugin):
         self.register_route('p', self.handle_p)
 
     def handle_lpv(self, request):
+        """Load Profile Version"""
         # NOTE no params to get
-        version = '5'
+        version = '50' # 5 makes game hang on loading 10%
 
         response = Element('lpv')
-        response.set('v', version)
+        # response.set('v', version)
 
         return response
 
     def handle_vsu(self, request):
+        """Version Statistic"""
+        user_id = ''
+
         response = Element('vsu')
+        response.set('id', user_id)
+        
+        return response
+
+    def handle_lp(self, request):
+        """Load Profile"""
+        response = Element('lp')
 
         return response
 

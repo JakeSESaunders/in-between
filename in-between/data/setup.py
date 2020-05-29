@@ -1,7 +1,9 @@
 import sqlite3
+from settings import db_path
 
 def setup_database():
-    conn = sqlite3.connect('funkeys.sqlite3')
+    # TODO check if database already exists
+    conn = sqlite3.connect(db_path)
     c = conn.cursor()
     c.execute('''
         CREATE TABLE base_user(
@@ -9,7 +11,10 @@ def setup_database():
             name TEXT,
             password TEXT,
             question TEXT,
-            answer TEXT
+            answer TEXT,
+            bf INTEGER,
+            cf INTEGER,
+            ph INTEGER
         )
     ''')
     c.execute('''

@@ -1,4 +1,5 @@
 import sqlite3
+from settings import db_path
 
 class Jammer:
     def __init__(self, stack_id, item_id, quantity, cost, discount):
@@ -19,7 +20,7 @@ class Familiar:
 
 def get_jammer_list():
     """Returns a list of jammer data for display in the trunk."""
-    conn = sqlite3.connect('funkeys.sqlite3')
+    conn = sqlite3.connect(db_path)
     c = conn.cursor()
     c.execute('''
         SELECT * FROM trunk_jammers
@@ -40,7 +41,7 @@ def get_jammer_list():
 
 def get_familiar_list():
     """Returns a list of familiar data for display in the trunk."""
-    conn = sqlite3.connect('funkeys.sqlite3')
+    conn = sqlite3.connect(db_path)
     c = conn.cursor()
     c.execute('''
         SELECT * FROM trunk_familiars
