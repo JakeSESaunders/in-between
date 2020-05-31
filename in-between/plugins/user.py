@@ -2,7 +2,7 @@ from plugins.plugin import Plugin
 from xml.etree.ElementTree import Element
 from copy import copy
 from data.volatile import userlist
-from data.user import get_id, get_name
+from data.user.user import get_id, get_name
 
 class PluginUser(Plugin):
     def __init__(self, plugin_id):
@@ -249,14 +249,25 @@ class PluginUser(Plugin):
         
     def handle_u_dbd(self, request): # TODO
         """Delete Buddy"""
-        pass
+        buddy_id = int(request.get('b'))
+        global userlist
+        user = userlist.get_user_from_id(self.user_id)
+        if user is not None:
+            user.delete_buddy(buddy_id)
+
+        response = Element('dbd')
+        response.set('r', '0') # result code
+        response.set('u', str(self.user_id))
+        response.set('b', str(buddy_id))
+
+        return response
 
     def handle_u_dbr(self, request): # TODO
         """Delete Buddy Request"""
         pass
 
     def handle_u_fbd(self, request): # TODO
-        """Flag? Buddy"""
+        """Flag Buddy""" # NOTE updates a buddy's cf, bf details in buddy list with b as id
         pass
 
     def handle_u_ccs(self, request):

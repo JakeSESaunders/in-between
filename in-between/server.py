@@ -10,9 +10,9 @@ import xml.etree.ElementTree as ElementTree
 from xml.etree.ElementTree import Element
 import data.setup as setup
 from data.volatile import userlist
-from data.user import login
+from data.user.user import login
+from settings import host_ip, host_port, debug
 
-debug = True
 # TODO implement logging to text file
 
 class InBetweenHandler(BaseRequestHandler):
@@ -54,7 +54,8 @@ class InBetweenHandler(BaseRequestHandler):
         """Called when TCP connection closed."""
         print(f'[DISCONNECT]: User at {self.client_address} disconnected')
         global userlist
-        userlist.disconnect(self.user.user_id)
+        if self.user is not None:
+            userlist.disconnect(self.user.user_id)
 
     def send_response(self, response):
         """Send an XML response to the client."""
@@ -122,6 +123,8 @@ class InBetweenHandler(BaseRequestHandler):
         if route == 'p':
             self.handle_p(request)
 
+    # TODO somehow implement these requests in a more elegant way
+    # current problem: how to pass the handler to the userlist
     def handle_a_lru(self, request):
         request_login_code = request.get('l')
         name = request.get('n')
@@ -220,8 +223,10 @@ class InBetweenHandler(BaseRequestHandler):
 
         self.send_response(response)
 
-def start_server(ip, port):
-    address = (ip, port)
+def start_server():
+    global host_ip
+    global host_port
+    address = (host_ip, host_port)
     with socketserver.ThreadingTCPServer(address, InBetweenHandler) as server:
         print('Server started! Looking for connections...')
         server.serve_forever()
@@ -232,6 +237,6 @@ if __name__ == "__main__":
         if args[0] == 'setup':
             setup.setup_database()
         else:
-            start_server('localhost', 80)
+            start_server()
     else:
-        start_server('localhost', 80)
+        start_server()

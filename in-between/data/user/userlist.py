@@ -1,4 +1,4 @@
-from data.user import User, get_id, get_name, login, get_user_details
+from data.user.user import User, get_id, get_name, login, get_user_details
 
 class Userlist:
     def __init__(self):
