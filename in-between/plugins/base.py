@@ -70,9 +70,10 @@ class PluginBase(Plugin):
         # NOTE the game closes the connection when this is sent
         service_id = request.get('s')
 
-        host_ip = 'localhost'
-        host_port = '80'
-        bin_ip = 'localhost' # NOTE purpose of this is unknown
+        global host_ip
+        global host_port
+
+        bin_ip = host_ip # NOTE purpose of this is unknown
         bin_port = '0' # as above
 
         response = Element('a_gsd')
@@ -87,9 +88,10 @@ class PluginBase(Plugin):
     def handle_a_gpd(self, request):
         plugin_id = request.get('p')
         # TODO check plugin with given id exists
-        host_ip = 'localhost'
-        host_port = '80'
-        bin_ip = 'localhost' # NOTE purpose of this is unknown
+        global host_ip
+        global host_port
+
+        bin_ip = host_ip # NOTE purpose of this is unknown
         bin_port = '0' # must be 0 otherwise plugins won't accept responses
         service_id = plugin_id
 

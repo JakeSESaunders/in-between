@@ -1,6 +1,7 @@
 from plugins.plugin import Plugin
 from xml.etree.ElementTree import Element
 import data.trunk
+from settings import host_ip
 
 class PluginTrunk(Plugin):
     def __init__(self, plugin_id):
@@ -33,7 +34,8 @@ class PluginTrunk(Plugin):
 
     def handle_gcl(self, request):
         """Get Cleanings? List"""
-        url = 'localhost'
+        global host_ip
+        url = host_ip
 
         response = Element('gcl')
         response.set('url', url)
@@ -48,7 +50,8 @@ class PluginTrunk(Plugin):
 
     def handle_gfl(self, request):
         """Get Familiars List"""
-        url = 'localhost'
+        global host_ip
+        url = host_ip
 
         response = Element('gfl')
         response.set('url', url)
@@ -69,7 +72,8 @@ class PluginTrunk(Plugin):
 
     def handle_gjl(self, request):
         """Get Jammers List"""
-        url = 'localhost'
+        global host_ip
+        url = host_ip
 
         response = Element('gjl')
         response.set('url', url)
@@ -89,7 +93,8 @@ class PluginTrunk(Plugin):
 
     def handle_gml(self, request):
         """Get Moods List"""
-        url = 'localhost'
+        global host_ip
+        url = host_ip
 
         response = Element('gml')
         response.set('url', url)

@@ -8,6 +8,7 @@ userlist = Userlist()
 
 chatrooms = Chatrooms()
 # NOTE room id 0 is for cribs
+chatrooms.add_room(Chatroom(0)) # Test Crib
 chatrooms.add_room(Chatroom(1)) # Gabby
 chatrooms.add_room(Chatroom(2)) # Rom
 chatrooms.add_room(Chatroom(3)) # Holler

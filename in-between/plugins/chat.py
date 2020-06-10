@@ -39,10 +39,10 @@ class PluginChat(Plugin):
 
         if connected:
             r = '0' # 0: OK, 1: closed for cleaning, 2: closed for cleaning
-            plugin_id = '0'
+            room_id = '0' # 20
             response = Element('jn')
             response.set('r', r)
-            response.set('id', plugin_id)
+            # response.set('id', room_id)
 
             return response
         
@@ -101,7 +101,16 @@ class PluginChat(Plugin):
 
     def handle_cr(self, request):
         """Create Room"""
-        pass
+        t = request.get('t')
+        player = request.find('pr')
+        user_id = player.get('uid')
+        name = player.get('n')
+        funkey_id = player.get('f')
+        dl = player.get('dl')
+        # can also get player subelement
+        # example req <cr t="0"><pr dl="0| | " f="000000CD" uid="3" n="TEST" /></cr>2|2|2|0#
+        id = '' # get id of creator?
+        max_players = '10'
 
     def handle_cd(self, request):
         """Creator Disconnect (Leave Crib)"""

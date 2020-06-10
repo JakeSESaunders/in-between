@@ -25,7 +25,6 @@ class User:
     def add_buddy(self, buddy_id):
         """Create a buddy relation between this user and the user with the given id."""
         # TODO make idempotent
-        print('buddy name', get_name(buddy_id))
         if get_name(buddy_id) is None:
             return
         conn = sqlite3.connect(db_path)
@@ -82,7 +81,31 @@ def register(name, password, question, answer): # TODO
     """Register a user with the given credentials. Returns the user id. If user with the given name already exists, return None."""
     if get_id(name) is not None:
         return None
-    pass
+    conn = sqlite3.connect(db_path)
+    c = conn.cursor()
+    c.execute('''
+        INSERT INTO base_user (name, password, question, answer, bf, cf, ph)
+        VALUES (:name, :password, :question, :answer, :bf, :cf, :ph)
+    ''', {
+        'name': name,
+        'password': password,
+        'question': question,
+        'answer': answer,
+        'bf': 0,
+        'cf': 0,
+        'ph': 0
+    })
+    c.execute('''
+        SELECT user_id
+        FROM base_user
+        WHERE name == :name
+    ''', {
+        'name': name
+    })
+    user_id = c.fetchone()[0]
+    conn.commit()
+    conn.close()
+    return user_id
 
 def login(name, password):
     """Login a user with the given credentials. Returns the user id. If user not found or password incorrect, return None."""

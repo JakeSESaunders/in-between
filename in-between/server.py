@@ -6,12 +6,13 @@ from plugins.user import PluginUser
 from plugins.chat import PluginChat
 from plugins.galaxy import PluginGalaxy
 from plugins.trunk import PluginTrunk
+from plugins.webservice import handle_http
 import xml.etree.ElementTree as ElementTree
 from xml.etree.ElementTree import Element
 import data.setup as setup
 from data.volatile import userlist
 from data.user.user import login
-from settings import host_ip, host_port, debug
+from settings import host_internal_ip, host_ip, host_port, debug
 
 # TODO implement logging to text file
 
@@ -45,7 +46,11 @@ class InBetweenHandler(BaseRequestHandler):
                     raw_requests += rq
                     break
                 raw_requests += rq
-            if len(raw_requests) > 0:
+                if '\r\n\r\n' in raw_requests.decode('iso-8859-1'):
+                    break
+            if '\r\n\r\n' in raw_requests.decode('iso-8859-1'):
+                self.handle_raw_http(raw_requests)
+            elif len(raw_requests) > 0:
                 self.handle_raw_requests(raw_requests)
             self.send_responses()
 
@@ -97,6 +102,51 @@ class InBetweenHandler(BaseRequestHandler):
                 plugin_id = int(ids[0])
                 self.handle_request(xml_request, plugin_id)
 
+    def handle_raw_http(self, request):
+        # TODO this needs improvement to check for malicious requests, but it'll do for now
+
+        # Parse the head
+        partial_request_string = request.decode('iso-8859-1')
+        head_end_index = partial_request_string.find('\r\n\r\n')
+        body_start_index = head_end_index + 4 # to account for \r\n\r\n
+        head_string = partial_request_string[:head_end_index]
+        head_parts = head_string.split('\r\n')
+
+        start_line_parts = head_parts[0].split(' ')
+        method, path, version = start_line_parts[0], start_line_parts[1], start_line_parts[2]
+
+        headers = {}
+        for header_data in head_parts[1:]:
+            if ': ' in header_data:
+                header_data_split = header_data.split(': ')
+                headers[header_data_split[0]] = header_data_split[1]
+
+        encoded_request = request
+
+        # Get the entire remaining message (if any body exists)
+        if 'Content-Length' in headers.keys():
+            content_length = int(headers['Content-Length'])
+            remaining_content_length = content_length - len(partial_request_string[body_start_index:].encode('iso-8859-1'))
+            print(f'Content-Length: {remaining_content_length}')
+            # TODO respond 413 if content-length is too large
+            if remaining_content_length > 0:
+                request_end = self.request.recv(remaining_content_length)
+                encoded_request = request + request_end
+            
+        decoded_request = encoded_request.decode()
+        body = decoded_request[body_start_index:]
+
+        print(f'[WEB REQ {self.client_address}]: {decoded_request}')
+
+        # Send to webservice plugin
+        decoded_response = handle_http(method, path, version, headers, body)
+        if decoded_response is not None:
+            print(f'[WEB RES {self.client_address}]: {decoded_response}')
+
+            # Send response to client
+            encoded_response = decoded_response.encode('iso-8859-1')
+            self.request.send(encoded_response)
+
     def handle_request(self, request, plugin_id):
         if plugin_id in self.plugins:
             self.plugins[plugin_id].handle_request(request)
@@ -108,20 +158,28 @@ class InBetweenHandler(BaseRequestHandler):
         route = request.tag
         if route == 'a_lru':
             self.handle_a_lru(request)
+            return
         if route == 'a_lgu':
             self.handle_a_lgu(request)
+            return
         if route == 'a_gsd':
             self.handle_a_gsd(request)
+            return
         if route == 'a_gpd':
             self.handle_a_gpd(request)
+            return
         if route == 'a_gsl':
             self.handle_a_gsl(request)
+            return
         if route == 'a_gfl':
             self.handle_a_gfl(request)
+            return
         if route == 'a_alo':
             self.handle_a_alo(request)
+            return
         if route == 'p':
             self.handle_p(request)
+            return
 
     # TODO somehow implement these requests in a more elegant way
     # current problem: how to pass the handler to the userlist
@@ -172,15 +230,16 @@ class InBetweenHandler(BaseRequestHandler):
         # NOTE the game closes the connection when this is sent
         service_id = request.get('s')
 
-        host_ip = 'localhost'
-        host_port = '80'
-        bin_ip = 'localhost' # NOTE purpose of this is unknown
+        global host_ip
+        global host_port
+
+        bin_ip = host_ip # NOTE purpose of this is unknown
         bin_port = '0' # as above
 
         response = Element('a_gsd')
         response.set('s', service_id)
         response.set('xi', host_ip)
-        response.set('xp', host_port)
+        response.set('xp', str(host_port))
         response.set('bi', bin_ip)
         response.set('bp', bin_port)
 
@@ -189,9 +248,10 @@ class InBetweenHandler(BaseRequestHandler):
     def handle_a_gpd(self, request):
         plugin_id = request.get('p')
         # TODO check plugin with given id exists
-        host_ip = 'localhost'
-        host_port = '80'
-        bin_ip = 'localhost' # NOTE purpose of this is unknown
+        global host_ip
+        global host_port
+
+        bin_ip = host_ip # NOTE purpose of this is unknown
         bin_port = '0' # must be 0 otherwise plugins won't accept responses
         service_id = plugin_id
 
@@ -199,7 +259,7 @@ class InBetweenHandler(BaseRequestHandler):
         response.set('s', service_id)
         response.set('p', plugin_id)
         response.set('xi', host_ip)
-        response.set('xp', host_port)
+        response.set('xp', str(host_port))
         response.set('bi', bin_ip)
         response.set('bp', bin_port)
 
@@ -226,9 +286,9 @@ class InBetweenHandler(BaseRequestHandler):
 def start_server():
     global host_ip
     global host_port
-    address = (host_ip, host_port)
+    address = (host_internal_ip, host_port)
     with socketserver.ThreadingTCPServer(address, InBetweenHandler) as server:
-        print('Server started! Looking for connections...')
+        print(f'Server started at {address}! Looking for connections...')
         server.serve_forever()
 
 if __name__ == "__main__":

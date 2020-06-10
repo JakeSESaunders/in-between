@@ -2,7 +2,7 @@ from plugins.plugin import Plugin
 from xml.etree.ElementTree import Element
 from copy import copy
 from data.volatile import userlist
-from data.user.user import get_id, get_name
+from data.user.user import get_id, get_name, register
 
 class PluginUser(Plugin):
     def __init__(self, plugin_id):
@@ -64,16 +64,18 @@ class PluginUser(Plugin):
 
     def handle_u_reg(self, request):
         """Register"""
-        name = request.get('l') # l for login name?
+        name = request.get('l')
         password = request.get('p')
         client_id = request.get('c')
         affiliate_id = request.get('a')
         ad_id = request.get('d')
         answer = request.get('sa')
         question = request.get('sq')
+
+        user_id = register(name, password, question, answer)
+
         # TODO change r based on result of register_user
         r = '0' # can take values 0-5, 90 and 99
-        # user_id = user.register_user(name, password, question, answer)
 
         response = Element('u_reg')
         response.set('r', str(r))
@@ -219,7 +221,6 @@ class PluginUser(Plugin):
             user = userlist.get_user_from_id(self.user_id)
             buddy = userlist.get_user_from_name(buddy_name)
 
-            print(user.name, buddy.name)
             user.add_buddy(buddy.user_id)
             
             user_response = Element('u_abd')
@@ -312,11 +313,21 @@ class PluginUser(Plugin):
 
     def handle_u_inv(self, request): # TODO
         """Invitation"""
-        pass
+        id = request.get('id') # unknown
+        p = request.get('p') # unknown
+        to_user_id = int(request.get('t')) # to
+        from_user_id = request.get('f') # from
+
+        global userlist
+        userlist.send_to_user_id(to_user_id, request)
 
     def handle_u_inr(self, request): # TODO
         """Invitation Response"""
-        pass
+        f = '' # from
+        t = '' # to
+        r = ''
+        a = '' # accept 0: Decline, 1: OK, 2: Busy
+        p = ''
 
     def handle_u_p(self, request):
         """Ping"""
