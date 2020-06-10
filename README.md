@@ -16,16 +16,16 @@ To launch the server, run `python in-between/server.py`.
 
 ### Features
 #### Implemented
-* Unique Funkey Names (when pre-registered in database)
+* Registering new Unique Funkey Names
 * Buddies and private chat
+* Multiplayer chat rooms (partially)
 * Leaderboard (partially)
 * Trunk (partially)
+* Update capabilities (partially)
+* Crib sharing (partially)
 
 #### Not Yet Implemented
-* Registering new Unique Funkey Names
-* Multiplayer chat rooms
-* Crib sharing
+* Crib parties
 * Cloud saves
-* Update capabilities
 * Multiplayer games
 * Game-builder sharing
