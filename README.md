@@ -13,6 +13,7 @@ Python 3.6?
 ### Usage
 To set up the server's database, run `python in-between/server.py setup`. You can specify a custom path for the database in `in-between/settings.py`.
 To launch the server, run `python in-between/server.py`.
+To connect to the server, a client needs a modified config.rdf which contains the server's ip address. Such a file can be made using [py-rdf](https://github.com/JakeSESaunders/py-rdf).
 
 ### Features
 #### Implemented
