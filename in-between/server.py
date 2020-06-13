@@ -11,8 +11,9 @@ import xml.etree.ElementTree as ElementTree
 from xml.etree.ElementTree import Element
 import data.setup as setup
 from data.volatile import userlist
-from data.user.user import login
-from settings import host_internal_ip, host_ip, host_port, debug
+from data.user.user import User, login
+from settings import host_internal_ip, host_ip, host_port, debug, blocked_addresses
+from data.volatile import chatrooms
 
 # TODO implement logging to text file
 
@@ -30,6 +31,13 @@ class InBetweenHandler(BaseRequestHandler):
     def handle(self):
         """Handles a TCP connection."""
         print(f'[CONNECT]: New connection from {self.client_address}')
+
+        global blocked_addresse
+        if self.client_address[0] in blocked_addresses:
+            print(f'[DISCONNECT]: Address {self.client_address[0]} blocked from server')
+            self.request.close()
+            return
+            
         while True:
             raw_requests = bytearray()
             while True:
@@ -38,6 +46,10 @@ class InBetweenHandler(BaseRequestHandler):
                 except:
                     print(f'[ERROR]: Connection to {self.client_address} closed unexpectedly')
                     self.request.close()
+                    # TODO close connection cleanly, remove from chats and multiplayer games etc
+                    global chatrooms
+                    if self.user is not None:
+                        chatrooms.disconnect(self.user.user_id)
                     return
                 if len(rq) <= 0:
                     self.request.close() # TODO meant to have some kind of shutdown thing here?
@@ -182,7 +194,6 @@ class InBetweenHandler(BaseRequestHandler):
             return
 
     # TODO somehow implement these requests in a more elegant way
-    # current problem: how to pass the handler to the userlist
     def handle_a_lru(self, request):
         request_login_code = request.get('l')
         name = request.get('n')
@@ -195,6 +206,7 @@ class InBetweenHandler(BaseRequestHandler):
         user_id = login(name, password)
         if user_id is not None:
             response_login_code = userlist.connect(user_id, self)
+            self.user = User(user_id, self)
         else:
             response_login_code = 1
 
@@ -288,7 +300,7 @@ def start_server():
     global host_port
     address = (host_internal_ip, host_port)
     with socketserver.ThreadingTCPServer(address, InBetweenHandler) as server:
-        print(f'Server started at {address}! Looking for connections...')
+        print(f'Server started at {host_ip}:{host_port}! Looking for connections...')
         server.serve_forever()
 
 if __name__ == "__main__":

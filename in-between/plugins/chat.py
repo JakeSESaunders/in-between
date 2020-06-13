@@ -37,14 +37,14 @@ class PluginChat(Plugin):
         global chatrooms
         connected = chatrooms.get_room(room_id).connect(user_id, name, funkey_id, dl, self)
 
-        if connected:
-            r = '0' # 0: OK, 1: closed for cleaning, 2: closed for cleaning
-            room_id = '0' # 20
-            response = Element('jn')
-            response.set('r', r)
-            # response.set('id', room_id)
+        #if connected:
+        #    r = '0' # 0: OK, 1: closed for cleaning, 2: closed for cleaning
+        #    room_id = '0' # 20
+        #    response = Element('jn')
+        #    response.set('r', r)
+        #    # response.set('id', room_id)
 
-            return response
+        #    return response
         
     def handle_lv(self, request):
         """Leave"""
